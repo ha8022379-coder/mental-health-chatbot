@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat History</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 25px 30px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header h2 {
+            color: #667eea;
+            font-size: 22px;
+        }
+
+        .header p {
+            color: #888;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .btn:hover { opacity: 0.9; }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .stat-card h3 {
+            font-size: 28px;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .stat-card p {
+            color: #888;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .chat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .chat-card .meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .emotion-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .emotion-happy { background: #28a745; }
+        .emotion-sad { background: #6c757d; }
+        .emotion-anxious { background: #ffc107; color: #333; }
+        .emotion-angry { background: #dc3545; }
+        .emotion-stressed { background: #fd7e14; }
+        .emotion-lonely { background: #6f42c1; }
+        .emotion-tired { background: #20c997; }
+        .emotion-hopeless { background: #343a40; }
+        .emotion-grateful { background: #17a2b8; }
+        .emotion-crisis { background: #dc3545; }
+        .emotion-greeting { background: #667eea; }
+        .emotion-neutral { background: #adb5bd; }
+
+        .timestamp {
+            color: #aaa;
+            font-size: 12px;
+        }
+
+        .user-msg {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            border-bottom-right-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-align: right;
+        }
+
+        .bot-msg {
+            background: #f8f9fa;
+            color: #333;
+            padding: 10px 15px;
+            border-radius: 15px;
+            border-bottom-left-radius: 4px;
+            font-size: 14px;
+        }
+
+        .label {
+            font-size: 11px;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+
+        .empty {
+            text-align: center;
+            background: white;
+            border-radius: 15px;
+            padding: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .empty h3 { color: #667eea; margin-bottom: 10px; }
+        .empty p { color: #888; font-size: 14px; }
+
+        .loading {
+            text-align: center;
+            color: white;
+            padding: 50px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h2>📋 Chat History</h2>
+                <p>Your previous conversations</p>
+            </div>
+            <a href="http://127.0.0.1:5000/chat-page" class="btn">💬 Back to Chat</a>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h3 id="totalChats">0</h3>
+                <p>Total Chats</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="topEmotion">-</h3>
+                <p>Most Common Mood</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="positiveDays">0%</h3>
+                <p>Positive Chats</p>
+            </div>
+        </div>
+
+        <div id="historyContainer">
+            <div class="loading">Loading your history... 💙</div>
+        </div>
+    </div>
+
+    <script>
+        async function loadHistory() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/history', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+    }
+});
+
+                if(!response.ok) {
+                throw new Error('Failed to fetch');
+        }
+
+                const data = await response.json();
+                console.log('History data:', data);
+
+                if(!data || data.length === 0) {
+                    document.getElementById('historyContainer').innerHTML = `
+                        <div class="empty">
+                            <h3>No chat history yet! 💙</h3>
+                            <p>Start a conversation and it will appear here.</p>
+                        </div>`;
+                    return;
+                }
+
+                // Update stats
+                document.getElementById('totalChats').textContent = data.length;
+
+                // Find most common emotion
+                const emotionCount = {};
+                let positiveCount = 0;
+                data.forEach(chat => {
+                    emotionCount[chat.emotion] = (emotionCount[chat.emotion] || 0) + 1;
+                    if(['happy', 'grateful', 'greeting'].includes(chat.emotion)) positiveCount++;
+                });
+
+                const topEmotion = Object.keys(emotionCount).reduce((a, b) =>
+                    emotionCount[a] > emotionCount[b] ? a : b);
+                document.getElementById('topEmotion').textContent = topEmotion;
+
+                const positivePercent = Math.round((positiveCount / data.length) * 100);
+                document.getElementById('positiveDays').textContent = positivePercent + '%';
+
+                // Show chat history (newest first)
+                const reversed = [...data].reverse();
+                const html = reversed.map(chat => `
+                    <div class="chat-card">
+                        <div class="meta">
+                            <span class="emotion-badge emotion-${chat.emotion}">
+                                ${getEmoji(chat.emotion)} ${chat.emotion}
+                            </span>
+                            <span class="timestamp">🕐 ${chat.timestamp}</span>
+                        </div>
+                        <div class="label">You said:</div>
+                        <div class="user-msg">${chat.user_message}</div>
+                        <div class="label">Chatbot replied:</div>
+                        <div class="bot-msg">${chat.bot_response}</div>
+                    </div>
+                `).join('');
+
+                document.getElementById('historyContainer').innerHTML = html;
+
+            } catch(error) {
+                document.getElementById('historyContainer').innerHTML = `
+                    <div class="empty">
+                        <h3>Could not load history</h3>
+                        <p>Make sure the server is running!</p>
+                    </div>`;
+            }
+        }
+
+        function getEmoji(emotion) {
+            const emojis = {
+                happy: '😊', sad: '😢', anxious: '😰',
+                angry: '😤', stressed: '😔', lonely: '💙',
+                tired: '😴', hopeless: '😞', grateful: '🌟',
+                crisis: '🆘', greeting: '👋', neutral: '😐'
+            };
+            return emojis[emotion] || '💙';
+        }
+
+        loadHistory();
+    </script>
+</body>
+</html>

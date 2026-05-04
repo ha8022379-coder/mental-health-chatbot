@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mental Health Chatbot - Login</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            width: 400px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h2 { font-size: 24px; margin-bottom: 5px; }
+        .header p { font-size: 13px; opacity: 0.8; }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #eee;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: bold;
+            color: #888;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .form-container { padding: 30px; }
+
+        .form { display: none; }
+        .form.active { display: block; }
+
+        .input-group { margin-bottom: 20px; }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        .input-group input:focus { border-color: #667eea; }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .btn:hover { opacity: 0.9; }
+
+        .error {
+            color: red;
+            font-size: 13px;
+            margin-bottom: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .success {
+            color: green;
+            font-size: 13px;
+            margin-bottom: 15px;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>💙 Mental Health Support</h2>
+            <p>You are not alone. We are here for you.</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('login')">Login</div>
+            <div class="tab" onclick="showTab('register')">Register</div>
+        </div>
+
+        <div class="form-container">
+
+            <!-- Login Form -->
+            <div class="form active" id="loginForm">
+                <div class="error" id="loginError"></div>
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email"/>
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password"/>
+                </div>
+                <button class="btn" onclick="login()">Login</button>
+            </div>
+
+            <!-- Register Form -->
+            <div class="form" id="registerForm">
+                <div class="error" id="registerError"></div>
+                <div class="success" id="registerSuccess"></div>
+                <div class="input-group">
+                    <label>Full Name</label>
+                    <input type="text" id="registerName" placeholder="Enter your name"/>
+                </div>
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" id="registerEmail" placeholder="Enter your email"/>
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="registerPassword" placeholder="Create a password"/>
+                </div>
+                <button class="btn" onclick="register()">Create Account</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.form').forEach(f => f.classList.remove('active'));
+
+            if(tab === 'login') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('loginForm').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('registerForm').classList.add('active');
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+
+            if(!email || !password) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = 'Please fill all fields!';
+                return;
+            }
+
+            const response = await fetch('http://127.0.0.1:5000/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                credentials: 'include',
+                body: JSON.stringify({email, password})
+            });
+
+            const data = await response.json();
+
+            if(response.ok) {
+                window.location.href = 'http://127.0.0.1:5000/chat-page';
+            } else {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = data.error;
+            }
+        }
+
+        async function register() {
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const errorDiv = document.getElementById('registerError');
+            const successDiv = document.getElementById('registerSuccess');
+
+            if(!name || !email || !password) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = 'Please fill all fields!';
+                return;
+            }
+
+            const response = await fetch('http://127.0.0.1:5000/register', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                credentials: 'include',
+                body: JSON.stringify({name, email, password})
+            });
+
+            const data = await response.json();
+
+            if(response.ok) {
+                successDiv.style.display = 'block';
+                successDiv.textContent = 'Account created! Redirecting...';
+                setTimeout(() => {
+                    window.location.href = 'http://127.0.0.1:5000/chat-page';
+                }, 1500);
+            } else {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = data.error;
+            }
+        }
+    </script>
+</body>
+</html>
