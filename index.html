@@ -268,43 +268,55 @@
             if (event.key === 'Enter') sendMessage();
         }
 
-        async function sendMessage() {
-            const input = document.getElementById('userInput');
-            const message = input.value.trim();
-            if (!message) return;
+        // Store conversation history
+let conversationHistory = [];
 
-            // Show user message
-            addMessage(message, 'user');
-            input.value = '';
+async function sendMessage() {
+    const input = document.getElementById('userInput');
+    const message = input.value.trim();
+    if (!message) return;
 
-            // Show typing indicator
-            const typing = document.getElementById('typing');
-            typing.style.display = 'block';
+    addMessage(message, 'user');
+    input.value = '';
 
-            try {
-                const response = await fetch('http://127.0.0.1:5000/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ message: message })
-                });
+    const typing = document.getElementById('typing');
+    typing.style.display = 'block';
 
-                const data = await response.json();
-                typing.style.display = 'none';
+    try {
+        const response = await fetch('/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                message: message,
+                history: conversationHistory
+            })
+        });
 
-                // Show bot response
-                addMessage(data.response, 'bot', data.emotion);
-                checkCrisis(data.emotion);
-            if(usedVoice) {
-                speakResponse(data.response);
-                usedVoice = false; // Reset after speaking
+        const data = await response.json();
+        typing.style.display = 'none';
+
+        // Add to conversation history
+        conversationHistory.push({ role: 'user', content: message });
+        conversationHistory.push({ role: 'assistant', content: data.response });
+
+        // Keep only last 10 messages
+        if(conversationHistory.length > 10) {
+            conversationHistory = conversationHistory.slice(-10);
         }
 
-            } catch (error) {
-                typing.style.display = 'none';
-                addMessage('Sorry, I am having trouble connecting. Please try again!', 'bot');
-            }
+        addMessage(data.response, 'bot', data.emotion);
+        checkCrisis(data.emotion);
+        if(usedVoice === true) {
+            setTimeout(() => speakResponse(data.response), 300);
+            usedVoice = false;
         }
+
+    } catch (error) {
+        typing.style.display = 'none';
+        addMessage('Sorry, I am having trouble connecting. Please try again!', 'bot');
+    }
+}
 
         function addMessage(text, sender, emotion = null) {
             const chatMessages = document.getElementById('chatMessages');

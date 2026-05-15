@@ -43,32 +43,37 @@ with app.app_context():
 
 # ---- AI FUNCTION ----
 
-def get_ai_response(user_message, emotion):
+def get_ai_response(user_message, emotion, conversation_history=[]):
     try:
+        # Build messages with history
+        messages = [
+            {
+                "role": "system",
+                "content": f"""You are a compassionate mental health support chatbot called MindCare.
+                The user is currently feeling {emotion}.
+                Follow these rules:
+                1. Remember the full conversation context
+                2. Reference previous messages when relevant
+                3. Give PRACTICAL advice and solutions
+                4. Be warm, human-like and HELPFUL
+                5. Ask ONE follow up question at the end
+                6. Keep response to 3-4 sentences maximum
+                7. Never give medical diagnoses
+                8. For serious issues recommend professional help
+                9. Vary your responses - don't repeat same pattern"""
+            }
+        ]
+
+        # Add conversation history
+        for msg in conversation_history[-6:]:  # Last 6 messages for context
+            messages.append(msg)
+
+        # Add current message
+        messages.append({"role": "user", "content": user_message})
+
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
-            messages=[
-                {
-                    "role": "system",
-                    "content": f"""You are a compassionate mental health support chatbot.
-                    The user is feeling {emotion}.
-                    Follow these rules strictly:
-                    1. DO NOT always start with I'm sorry
-                    2. Give PRACTICAL advice or tips when possible
-                    3. Suggest real solutions like breathing exercises, talking to someone, taking a walk, journaling etc
-                    4. Be warm and human-like but also HELPFUL
-                    5. Sometimes validate feelings, sometimes give advice, sometimes share a helpful tip
-                    6. Ask ONE follow up question at the end
-                    7. Keep response to 3-4 sentences maximum
-                    8. Never give medical diagnoses
-                    9. For serious issues always recommend professional help
-                    10. Vary your responses - don't follow same pattern every time"""
-                },
-                {
-                    "role": "user",
-                    "content": user_message
-                }
-            ],
+            messages=messages,
             max_tokens=150
         )
         response = completion.choices[0].message.content
@@ -146,9 +151,10 @@ def check_session():
 def chat():
     data = request.json
     user_message = data.get('message', '')
+    conversation_history = data.get('history', [])
 
     emotion = detect_emotion(user_message)
-    bot_response = get_ai_response(user_message, emotion)
+    bot_response = get_ai_response(user_message, emotion, conversation_history)
 
     chat = ChatHistory(
         user_id=session.get('user_id'),
