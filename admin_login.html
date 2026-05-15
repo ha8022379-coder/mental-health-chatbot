@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Login - MindCare</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #1a1a2e;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .card {
+            background: linear-gradient(135deg, #16213e, #0f3460);
+            padding: 40px;
+            border-radius: 20px;
+            width: 380px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        h2 { color: white; text-align: center; margin-bottom: 30px; font-size: 22px; }
+        .input-group { margin-bottom: 20px; }
+        label { color: #aaa; font-size: 13px; display: block; margin-bottom: 6px; }
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+        input:focus { border-color: #e94560; }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #e94560;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn:hover { opacity: 0.9; }
+        .error { color: #e94560; font-size: 13px; text-align: center; margin-bottom: 15px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🛡️ Admin Login</h2>
+        <div class="error" id="error"></div>
+        <div class="input-group">
+            <label>Admin Email</label>
+            <input type="email" id="email" placeholder="admin@mindcare.com"/>
+        </div>
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="Enter admin password"/>
+        </div>
+        <button class="btn" onclick="adminLogin()">Login as Admin</button>
+    </div>
+
+    <script>
+        async function adminLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error');
+
+            const res = await fetch('/admin/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                credentials: 'include',
+                body: JSON.stringify({email, password})
+            });
+
+            const data = await res.json();
+            if(res.ok) {
+                window.location.href = '/admin-panel';
+            } else {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = data.error;
+            }
+        }
+    </script>
+</body>
+</html>

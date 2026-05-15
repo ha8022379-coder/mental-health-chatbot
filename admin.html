@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindCare Admin Panel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #1a1a2e;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #16213e, #0f3460);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .navbar h1 {
+            color: white;
+            font-size: 20px;
+        }
+
+        .navbar span {
+            color: #e94560;
+            font-size: 13px;
+            background: rgba(233,69,96,0.1);
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 1px solid #e94560;
+        }
+
+        .logout-btn {
+            color: white;
+            background: #e94560;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-left: 15px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #16213e, #0f3460);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .stat-card p {
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        .stat-card.blue h3 { color: #4fc3f7; }
+        .stat-card.green h3 { color: #81c784; }
+        .stat-card.orange h3 { color: #ffb74d; }
+        .stat-card.red h3 { color: #e94560; }
+
+        .section {
+            background: linear-gradient(135deg, #16213e, #0f3460);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .section h2 {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: rgba(255,255,255,0.05);
+            color: #aaa;
+            font-size: 12px;
+            padding: 12px 15px;
+            text-align: left;
+            text-transform: uppercase;
+        }
+
+        td {
+            color: #ddd;
+            font-size: 13px;
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        tr:hover td { background: rgba(255,255,255,0.03); }
+
+        .badge {
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .badge-happy { background: #28a745; }
+        .badge-sad { background: #6c757d; }
+        .badge-anxious { background: #ffc107; color: #333; }
+        .badge-angry { background: #dc3545; }
+        .badge-stressed { background: #fd7e14; }
+        .badge-lonely { background: #6f42c1; }
+        .badge-tired { background: #20c997; }
+        .badge-hopeless { background: #343a40; }
+        .badge-grateful { background: #17a2b8; }
+        .badge-crisis { background: #dc3545; }
+        .badge-greeting { background: #667eea; }
+        .badge-neutral { background: #adb5bd; }
+
+        .delete-btn {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .delete-btn:hover { opacity: 0.8; }
+
+        .loading {
+            color: #aaa;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .search-box {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            width: 300px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .search-box::placeholder { color: #888; }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <h1>🛡️ MindCare Admin Panel</h1>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <span>⚡ Admin Access</span>
+            <button class="logout-btn" onclick="window.location.href='/'">>logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card blue">
+                <h3 id="totalUsers">0</h3>
+                <p>👥 Total Users</p>
+            </div>
+            <div class="stat-card green">
+                <h3 id="totalChats">0</h3>
+                <p>💬 Total Chats</p>
+            </div>
+            <div class="stat-card orange">
+                <h3 id="topEmotion">-</h3>
+                <p>🎭 Top Emotion</p>
+            </div>
+            <div class="stat-card red">
+                <h3 id="crisisCount">0</h3>
+                <p>🆘 Crisis Alerts</p>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="section">
+            <h2>👥 Registered Users</h2>
+            <input class="search-box" type="text"
+                placeholder="🔍 Search users..."
+                oninput="filterUsers(this.value)"/>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Joined</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTable">
+                    <tr><td colspan="5" class="loading">Loading users...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Chats Table -->
+        <div class="section">
+            <h2>💬 Recent Conversations</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Message</th>
+                        <th>Emotion</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody id="chatsTable">
+                    <tr><td colspan="4" class="loading">Loading chats...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script>
+        let allUsers = [];
+
+        async function loadAdminData() {
+            try {
+                const res = await fetch('/admin/data', { credentials: 'include' });
+                if(res.status === 403) {
+                    alert('Access denied! Admins only.');
+                    window.location.href = '/';
+                    return;
+                }
+                const data = await res.json();
+
+                // Stats
+                document.getElementById('totalUsers').textContent = data.total_users;
+                document.getElementById('totalChats').textContent = data.total_chats;
+                document.getElementById('topEmotion').textContent = data.top_emotion || '-';
+                document.getElementById('crisisCount').textContent = data.crisis_count;
+
+                // Users table
+                allUsers = data.users;
+                renderUsers(allUsers);
+
+                // Chats table
+                const chatsHTML = data.recent_chats.map(chat => `
+                    <tr>
+                        <td>${chat.user_name || 'Unknown'}</td>
+                        <td>${chat.user_message.substring(0, 50)}${chat.user_message.length > 50 ? '...' : ''}</td>
+                        <td><span class="badge badge-${chat.emotion}">${chat.emotion}</span></td>
+                        <td>${chat.timestamp}</td>
+                    </tr>
+                `).join('');
+                document.getElementById('chatsTable').innerHTML = chatsHTML || '<tr><td colspan="4" class="loading">No chats yet</td></tr>';
+
+            } catch(error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function renderUsers(users) {
+            const html = users.map(user => `
+                <tr>
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.created_at}</td>
+                    <td>
+                        <button class="delete-btn"
+                            onclick="deleteUser(${user.id}, '${user.name}')">
+                            🗑️ Delete
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('usersTable').innerHTML = html || '<tr><td colspan="5" class="loading">No users yet</td></tr>';
+        }
+
+        function filterUsers(query) {
+            const filtered = allUsers.filter(u =>
+                u.name.toLowerCase().includes(query.toLowerCase()) ||
+                u.email.toLowerCase().includes(query.toLowerCase())
+            );
+            renderUsers(filtered);
+        }
+
+        async function deleteUser(userId, userName) {
+            if(!confirm(`Are you sure you want to delete user: ${userName}?`)) return;
+
+            const res = await fetch(`/admin/delete-user/${userId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            if(res.ok) {
+                alert(`User ${userName} deleted successfully!`);
+                loadAdminData();
+            } else {
+                alert('Error deleting user!');
+            }
+        }
+
+        loadAdminData();
+    </script>
+</body>
+</html>

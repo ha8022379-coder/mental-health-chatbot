@@ -166,6 +166,73 @@ def chat():
 
 # ---- PAGES ----
 
+# Admin credentials
+ADMIN_EMAIL = "admin@mindcare.com"
+ADMIN_PASSWORD = "admin123"
+
+@app.route('/admin/login', methods=['POST'])
+def admin_login():
+    data = request.json
+    if data.get('email') == ADMIN_EMAIL and data.get('password') == ADMIN_PASSWORD:
+        session['is_admin'] = True
+        return jsonify({"message": "Admin login successful!"})
+    return jsonify({"error": "Invalid admin credentials!"}), 401
+
+@app.route('/admin/data', methods=['GET'])
+def admin_data():
+    if not session.get('is_admin'):
+        return jsonify({"error": "Access denied!"}), 403
+
+    users = User.query.all()
+    chats = ChatHistory.query.order_by(ChatHistory.timestamp.desc()).limit(50).all()
+
+    emotion_count = {}
+    crisis_count = 0
+    for chat in ChatHistory.query.all():
+        emotion_count[chat.emotion] = emotion_count.get(chat.emotion, 0) + 1
+        if chat.emotion == 'crisis':
+            crisis_count += 1
+
+    top_emotion = max(emotion_count, key=emotion_count.get) if emotion_count else '-'
+
+    return jsonify({
+        "total_users": len(users),
+        "total_chats": ChatHistory.query.count(),
+        "top_emotion": top_emotion,
+        "crisis_count": crisis_count,
+        "users": [{
+            "id": u.id,
+            "name": u.name,
+            "email": u.email,
+            "created_at": u.created_at.strftime("%Y-%m-%d %H:%M")
+        } for u in users],
+        "recent_chats": [{
+            "user_name": User.query.get(c.user_id).name if c.user_id else "Guest",
+            "user_message": c.user_message,
+            "emotion": c.emotion,
+            "timestamp": c.timestamp.strftime("%Y-%m-%d %H:%M")
+        } for c in chats]
+    })
+
+@app.route('/admin/delete-user/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    if not session.get('is_admin'):
+        return jsonify({"error": "Access denied!"}), 403
+
+    user = User.query.get(user_id)
+    if user:
+        ChatHistory.query.filter_by(user_id=user_id).delete()
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({"message": "User deleted!"})
+    return jsonify({"error": "User not found!"}), 404
+
+@app.route('/admin-panel')
+def admin_panel():
+    return send_from_directory('.', 'admin.html')
+@app.route('/admin-login')
+def admin_login_page():
+    return send_from_directory('.', 'admin_login.html')
 @app.route('/')
 def home():
     return send_from_directory('.', 'login.html')
